@@ -1,0 +1,657 @@
+[
+    {
+        "id": "3011e371b413f0ec",
+        "type": "tab",
+        "label": "Node-RED data flow_ FINAL",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f4124f7aacb25e36",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/joint_temperature",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 400,
+        "y": 300,
+        "wires": [
+            [
+                "10d4586e8394f87c"
+            ]
+        ]
+    },
+    {
+        "id": "10d4586e8394f87c",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the input payload as an object\nvar value = msg.payload;\n\n// Check if the input is an object and contains the expected keys\nif (typeof value === \"object\" && \n    value.hasOwnProperty(\"j1\") &&\n    value.hasOwnProperty(\"j2\") &&\n    value.hasOwnProperty(\"j3\") &&\n    value.hasOwnProperty(\"j4\") &&\n    value.hasOwnProperty(\"j5\") &&\n    value.hasOwnProperty(\"j6\")) {\n\n    // Prepare the data for MySQL insertion\n    msg.payload = {\n        \"j1\": parseFloat(value.j1),\n        \"j2\": parseFloat(value.j2),\n        \"j3\": parseFloat(value.j3),\n        \"j4\": parseFloat(value.j4),\n        \"j5\": parseFloat(value.j5),\n        \"j6\": parseFloat(value.j6)\n    };\n} else {\n    // Log an error if the input is invalid\n    node.error('Invalid input format. Expected an object with keys j1, j2, j3, j4, j5, and j6.', msg);\n}\n\n// Return the modified message object\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 300,
+        "wires": [
+            [
+                "f6013408224070e0"
+            ]
+        ]
+    },
+    {
+        "id": "f6013408224070e0",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "joint temperature",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "joint temperature",
+        "x": 1880,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "637ff41e2b304f67",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/joint_current",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 390,
+        "y": 360,
+        "wires": [
+            [
+                "dfd631749961dad2"
+            ]
+        ]
+    },
+    {
+        "id": "dfd631749961dad2",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the input payload as an object\nvar value = msg.payload;\n\n// Check if the input is an object and contains the expected keys\nif (typeof value === \"object\" && \n    value.hasOwnProperty(\"j1\") &&\n    value.hasOwnProperty(\"j2\") &&\n    value.hasOwnProperty(\"j3\") &&\n    value.hasOwnProperty(\"j4\") &&\n    value.hasOwnProperty(\"j5\") &&\n    value.hasOwnProperty(\"j6\")) {\n\n    // Prepare the data for MySQL insertion\n    msg.payload = {\n        \"j1\": parseFloat(value.j1),\n        \"j2\": parseFloat(value.j2),\n        \"j3\": parseFloat(value.j3),\n        \"j4\": parseFloat(value.j4),\n        \"j5\": parseFloat(value.j5),\n        \"j6\": parseFloat(value.j6)\n    };\n} else {\n    // Log an error if the input is invalid\n    node.error('Invalid input format. Expected an object with keys j1, j2, j3, j4, j5, and j6.', msg);\n}\n\n// Return the modified message object\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 360,
+        "wires": [
+            [
+                "fc0292cb54718e0a",
+                "62b7c43d1a2d5728"
+            ]
+        ]
+    },
+    {
+        "id": "fc0292cb54718e0a",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "joint current",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "joint current",
+        "x": 1880,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "dd35a04944743aae",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/joint_voltage",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 390,
+        "y": 420,
+        "wires": [
+            [
+                "807dc28184eacfac"
+            ]
+        ]
+    },
+    {
+        "id": "807dc28184eacfac",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the input payload as an object\nvar value = msg.payload;\n\n// Check if the input is an object and contains the expected keys\nif (typeof value === \"object\" && \n    value.hasOwnProperty(\"j1\") &&\n    value.hasOwnProperty(\"j2\") &&\n    value.hasOwnProperty(\"j3\") &&\n    value.hasOwnProperty(\"j4\") &&\n    value.hasOwnProperty(\"j5\") &&\n    value.hasOwnProperty(\"j6\")) {\n\n    // Prepare the data for MySQL insertion\n    msg.payload = {\n        \"j1\": parseFloat(value.j1),\n        \"j2\": parseFloat(value.j2),\n        \"j3\": parseFloat(value.j3),\n        \"j4\": parseFloat(value.j4),\n        \"j5\": parseFloat(value.j5),\n        \"j6\": parseFloat(value.j6)\n    };\n} else {\n    // Log an error if the input is invalid\n    node.error('Invalid input format. Expected an object with keys j1, j2, j3, j4, j5, and j6.', msg);\n}\n\n// Return the modified message object\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 420,
+        "wires": [
+            [
+                "229b8a1db6323178"
+            ]
+        ]
+    },
+    {
+        "id": "229b8a1db6323178",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "joint voltage",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "joint voltage",
+        "x": 1880,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "99392501b56e3c0c",
+        "type": "http request",
+        "z": "3011e371b413f0ec",
+        "name": "REST API",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.10.229:5000/predict",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1520,
+        "y": 740,
+        "wires": [
+            [
+                "49a14260707d445f"
+            ]
+        ]
+    },
+    {
+        "id": "1efecb1b00d53210",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "Prediction",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "LSTM_Prediction",
+        "x": 1880,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "4097c6cce820ad20",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/main_voltage",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 390,
+        "y": 540,
+        "wires": [
+            [
+                "fbf9af1a0723611d"
+            ]
+        ]
+    },
+    {
+        "id": "578d8d03db2886e2",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/robot_voltage",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 390,
+        "y": 600,
+        "wires": [
+            [
+                "92a368b7fd61ae3c"
+            ]
+        ]
+    },
+    {
+        "id": "4e2a375812841eee",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/robot_current",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 390,
+        "y": 660,
+        "wires": [
+            [
+                "cbefd6b933fbedae"
+            ]
+        ]
+    },
+    {
+        "id": "49a14260707d445f",
+        "type": "function",
+        "z": "3011e371b413f0ec",
+        "name": "Extractor  node",
+        "func": "msg.queryParameters = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1700,
+        "y": 740,
+        "wires": [
+            [
+                "1efecb1b00d53210"
+            ]
+        ]
+    },
+    {
+        "id": "cd0d7d987c31cb42",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/force",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 360,
+        "y": 240,
+        "wires": [
+            [
+                "acbd03e3ee10bf34"
+            ]
+        ]
+    },
+    {
+        "id": "43aa774953581344",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "Force",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "Force",
+        "x": 1880,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "acbd03e3ee10bf34",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the input payload as an object\nvar value = msg.payload;\n\n// Check if the input is an object and contains the expected keys\nif (typeof value === \"object\" && \n    value.hasOwnProperty(\"fx\") &&\n    value.hasOwnProperty(\"fy\") &&\n    value.hasOwnProperty(\"fz\")){\n\n    // Prepare the data for MySQL insertion\n    msg.payload = {\n        \"fx\": parseFloat(value.fx),\n        \"fy\": parseFloat(value.fy),\n        \"fz\": parseFloat(value.fz)\n    };\n} else {\n    // Log an error if the input is invalid\n    node.error('Invalid input format. Expected an object with keys j1, j2, j3, j4, j5, and j6.', msg);\n}\n\n// Return the modified message object\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 240,
+        "wires": [
+            [
+                "43aa774953581344",
+                "62b7c43d1a2d5728"
+            ]
+        ]
+    },
+    {
+        "id": "62b7c43d1a2d5728",
+        "type": "join",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "payload",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "0",
+        "count": "3",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 1030,
+        "y": 740,
+        "wires": [
+            [
+                "10ad6e5adf1515bd"
+            ]
+        ]
+    },
+    {
+        "id": "fbf9af1a0723611d",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "msg.queryParameters = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 540,
+        "wires": [
+            [
+                "0329d3803cc49906"
+            ]
+        ]
+    },
+    {
+        "id": "8670c4430d4513b2",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "Position_Endeffector",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "Position_Endeffector",
+        "x": 1880,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "18c94233b10a9c44",
+        "type": "mqtt in",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "topic": "robot/end_effector_position",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "e2cc08cc2ba21587",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 410,
+        "y": 480,
+        "wires": [
+            [
+                "aa17934698696c90"
+            ]
+        ]
+    },
+    {
+        "id": "aa17934698696c90",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the input payload as an object\nvar value = msg.payload;\n\n// Check if the input is an object and contains the expected keys\nif (typeof value === \"object\" && \n    value.hasOwnProperty(\"x\") &&\n    value.hasOwnProperty(\"y\") &&\n    value.hasOwnProperty(\"z\") &&\n    value.hasOwnProperty(\"rx\") &&\n    value.hasOwnProperty(\"ry\") &&\n    value.hasOwnProperty(\"rz\")) {\n\n    // Prepare the data for MySQL insertion\n    msg.payload = {\n        \"x\": parseFloat(value.x),\n        \"y\": parseFloat(value.y),\n        \"z\": parseFloat(value.z),\n        \"rx\": parseFloat(value.x),\n        \"ry\": parseFloat(value.y),\n        \"rz\": parseFloat(value.z),\n    };\n} else {\n    // Log an error if the input is invalid\n    node.error('Invalid input format. Expected an object with keys j1, j2, j3, j4, j5, and j6.', msg);\n}\n\n// Return the modified message object\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 480,
+        "wires": [
+            [
+                "8670c4430d4513b2"
+            ]
+        ]
+    },
+    {
+        "id": "0329d3803cc49906",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "MainVoltage",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "MainVoltage",
+        "x": 1880,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "92a368b7fd61ae3c",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "msg.queryParameters = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 600,
+        "wires": [
+            [
+                "3f1b121ba199ebb0"
+            ]
+        ]
+    },
+    {
+        "id": "cbefd6b933fbedae",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Assumiamo che il valore di msg.payload sia un numero che vogliamo inserire in un oggetto.\nmsg.payload = {\n    robot_current: msg.payload\n};\n\n// Restituiamo il messaggio aggiornato\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 660,
+        "wires": [
+            [
+                "d4fc5842d57a70b7",
+                "62b7c43d1a2d5728"
+            ]
+        ]
+    },
+    {
+        "id": "3f1b121ba199ebb0",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "Robot_voltage",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "Robot_voltage",
+        "x": 1880,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "d4fc5842d57a70b7",
+        "type": "influxdb out",
+        "z": "3011e371b413f0ec",
+        "influxdb": "1e7eb50892436d0e",
+        "name": "InfluxDB",
+        "measurement": "RobotCurrent",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "Thesis",
+        "bucket": "RobotCurrent",
+        "x": 1880,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "10ad6e5adf1515bd",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the telemetry data from msg.payload\nvar value = msg.payload;\n\n// Ensure the input is an array with at least 3 elements\nif (Array.isArray(value) && value.length === 3) {\n    try {\n        // Extract relevant fields from the payload\n        var j2_current = value[0]?.j2; // j2 from the first object\n        var j3_current = value[0]?.j3; // j3 from the first object\n        var j4_current = value[0]?.j4; // j4 from the first object\n        var robot_current = value[1]?.robot_current; // robot_current from the second object\n        var fx = value[2]?.fx; // fx from the third object\n\n        // Validate that all required fields are present and are numbers\n        var isValidData = [j2_current, j3_current, j4_current, robot_current, fx].every(v => typeof v === \"number\" && !isNaN(v));\n\n        if (isValidData) {\n            // Format the telemetry string\n            var telemetryString = `j2_current: ${j2_current.toFixed(2)}, j3_current: ${j3_current.toFixed(2)}, j4_current: ${j4_current.toFixed(2)}, robot_current: ${robot_current.toFixed(2)}, fx: ${fx.toFixed(2)}`;\n\n            // Update the message payload with the formatted string\n            msg.payload = telemetryString;\n\n            // Pass the updated message to the next node\n            return msg;\n        } else {\n            // Log and return an error if fields are missing or invalid\n            node.warn(\"Missing or invalid telemetry fields.\");\n            return {\n                payload: {\n                    error: \"Missing or invalid telemetry fields\",\n                    raw: value // Include raw data for debugging\n                }\n            };\n        }\n    } catch (err) {\n        // Handle unexpected errors during processing\n        node.error(\"Error processing telemetry data: \" + err.message);\n        return {\n            payload: {\n                error: \"Error processing telemetry data\",\n                raw: value // Include raw data for debugging\n            }\n        };\n    }\n} else {\n    // Log and return an error if the input is not in the expected format\n    node.warn(\"Invalid telemetry data format. Expected an array of length 3.\");\n    return {\n        payload: {\n            error: \"Invalid telemetry data format\",\n            raw: value // Include raw data for debugging\n        }\n    };\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1200,
+        "y": 740,
+        "wires": [
+            [
+                "36095ea8e6156691"
+            ]
+        ]
+    },
+    {
+        "id": "36095ea8e6156691",
+        "type": "functionx",
+        "z": "3011e371b413f0ec",
+        "name": "",
+        "func": "// Parse the telemetry data from msg.payload\nvar value = msg.payload;\n\n// Regular expression to match telemetry data (allow flexibility with optional spaces)\nvar regex = /j2_current:\\s*([\\d.-]+),\\s*j3_current:\\s*([\\d.-]+),\\s*j4_current:\\s*([\\d.-]+),\\s*robot_current:\\s*([\\d.-]+),\\s*fx:\\s*([\\d.-]+)/;\n\n// Match the telemetry string using the regex\nvar match = value.match(regex);\n\nif (match && match.length >= 5) { // Ensure there are enough matches (5 values + the full match at index 0)\n    try {\n        // Convert matched data into an array of floats\n        var telemetryArray = [\n            parseFloat(match[1]), // j2_current\n            parseFloat(match[2]), // j3_current\n            parseFloat(match[3]), // j4_current\n            parseFloat(match[4]), // robot_current\n            parseFloat(match[5])  // fx\n        ];\n\n        // Validate that all values are numeric\n        if (!telemetryArray.every(v => !isNaN(v))) {\n            node.warn(\"Invalid numeric values in telemetry data.\");\n            return {\n                payload: {\n                    error: \"Invalid numeric values in telemetry data\",\n                    raw: value // Include raw data for debugging\n                }\n            };\n        }\n\n        // Retrieve the sliding window (sequence) from the context\n        var sequence = context.get(\"sensorData\") || [];\n        sequence.push(telemetryArray); // Add the current telemetry data to the sequence\n\n        // Ensure the sequence length does not exceed the required length (n_steps = 5)\n        if (sequence.length > 10) {\n            sequence.shift(); // Remove the oldest entry to maintain the sliding window\n        }\n\n        // Update the sliding window in the context\n        context.set(\"sensorData\", sequence);\n\n        // Check if we have a full sequence of 5 time steps\n        if (sequence.length === 10) {\n            // Flatten the sequence into a 1D array of shape (n_steps * n_features)\n            var input_sequence = sequence.flat();\n\n            // Prepare the payload for the REST API in JSON format\n            msg.payload = {\n                \"input\": input_sequence // Send the flattened sequence as input\n            };\n\n            // Set headers for the HTTP POST request\n            msg.headers = {\n                \"Content-Type\": \"application/json\"\n            };\n\n            // Log successful processing\n            node.debug(\"Telemetry sequence sent to REST API: \" + JSON.stringify(input_sequence));\n\n            // Pass the updated message to the next node\n            return msg;\n        } else {\n            // If the sequence is not yet complete, store it and wait for more data\n            return null;\n        }\n    } catch (error) {\n        // Handle any unexpected errors during processing\n        node.error(\"Error processing telemetry data: \" + error.message);\n        return {\n            payload: {\n                error: \"Error processing telemetry data\",\n                raw: value\n            }\n        };\n    }\n} else {\n    // If the regex match fails or there aren't enough matches, log a warning and return an error payload\n    node.warn(\"Telemetry data format invalid or incomplete.\");\n    return {\n        payload: {\n            error: \"Invalid or incomplete telemetry data\",\n            raw: value // Include the raw telemetry data for debugging\n        }\n    };\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1360,
+        "y": 740,
+        "wires": [
+            [
+                "99392501b56e3c0c"
+            ]
+        ]
+    },
+    {
+        "id": "e2cc08cc2ba21587",
+        "type": "mqtt-broker",
+        "name": "MQTT@172.24.176.1",
+        "broker": "192.168.189.1",
+        "port": "1883",
+        "tls": "ac956881298860a2",
+        "clientid": "trm",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "5",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": false,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": "10"
+    },
+    {
+        "id": "1e7eb50892436d0e",
+        "type": "influxdb",
+        "hostname": "172.24.176.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "TestModel",
+        "name": "",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://172.24.176.1:8086",
+        "timeout": "10",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "ac956881298860a2",
+        "type": "tls-config",
+        "name": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": true,
+        "alpnprotocol": "FEK"
+    }
+]

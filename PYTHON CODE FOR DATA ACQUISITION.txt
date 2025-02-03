@@ -1,0 +1,182 @@
+import sys
+import time
+import json
+import threading
+import paho.mqtt.client as mqtt
+import urx_tools.urx as urx
+import numpy as np
+
+# MQTT Settings
+broker_address = "192.168.10.229"
+broker_port = 1883
+
+# Set MQTT topics
+topic_joint_temperature = "robot/joint_temperature"
+topic_joint_voltage = "robot/joint_voltage"
+topic_joint_current = "robot/joint_current"
+topic_main_voltage = "robot/main_voltage"
+topic_robot_voltage = "robot/robot_voltage"
+topic_robot_current = "robot/robot_current"
+topic_end_effector_position = "robot/end_effector_position"
+topic_force = "robot/force"
+
+# Define the initial and target points for robot movement
+initial_point =  [-0.06420520714466654, -0.9948808995023735, 0.7844329074129652, -0.045379152993813364, -0.0195960473450654, 0.07773728874139159]
+intermediate_point1 = [-0.13296429031256102, -0.6921672384390719, 0.17512500686599908, 1.053229646051022, 1.2933503656713263, -1.3481652824223163]
+intermediate_point2 = [0.5326846820659328, -0.1701305989507954, 0.3914629801005773, -0.018182443165075977, 0.12210750945574024, -0.039532975967727736]
+target_point = [1.0061431084610557, -0.16687230940783648, 0.2174004831924725, -0.06877506968089996, 1.5136884195286102, -0.05113092829053952]
+
+# Shared stop event and movement completion flag
+stop_event = threading.Event()
+movement_completed = threading.Event()
+
+# Callback for MQTT connection
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT broker.")
+        userdata["connected_flag"] = True
+    else:
+        print(f"Failed to connect to MQTT broker, code: {rc}")
+
+# Create MQTT client
+client = mqtt.Client(client_id="mqttx_18dbdfb6")
+client.user_data_set({"connected_flag": False})  # Initialize user data
+client.on_connect = on_connect
+client.connect(broker_address, broker_port, 60)
+client.loop_start()
+
+def publish_data(rob):
+    """Publish telemetry data to MQTT broker."""
+    try:
+        # Retrieve telemetry data and convert to lists where needed
+        j_temp = list(rob.get_joint_temperature())
+        j_voltage = list(rob.get_joint_voltage())
+        j_current = list(rob.get_joint_current())
+        ee_position = list(rob.getl())
+        force = list(rob.get_force())
+
+        # Publish joint temperature
+        if isinstance(j_temp, (list, np.ndarray)):
+            joint_temp_msg = {f"j{i+1}": round(temp, 2) for i, temp in enumerate(j_temp)}
+        else:  # Handle scalar case
+            joint_temp_msg = {"j1": round(j_temp, 2)}
+        client.publish(topic_joint_temperature, json.dumps(joint_temp_msg))
+
+        # Publish joint voltage
+        if isinstance(j_voltage, (list, np.ndarray)):
+            joint_voltage_msg = {f"j{i+1}": voltage for i, voltage in enumerate(j_voltage)}
+        else:  # Handle scalar case
+            joint_voltage_msg = {"j1": j_voltage}
+        client.publish(topic_joint_voltage, json.dumps(joint_voltage_msg))
+
+        # Publish joint current
+        if isinstance(j_current, (list, np.ndarray)):
+            joint_current_msg = {f"j{i+1}": current for i, current in enumerate(j_current)}
+        else:  # Handle scalar case
+            joint_current_msg = {"j1": j_current}
+        client.publish(topic_joint_current, json.dumps(joint_current_msg))
+
+        # Publish main voltage, robot voltage, and robot current
+        main_voltage = rob.get_main_voltage()
+        robot_voltage = rob.get_robot_voltage()
+        robot_current = rob.get_robot_current()
+        client.publish(topic_main_voltage, str(main_voltage))
+        client.publish(topic_robot_voltage, str(robot_voltage))
+        client.publish(topic_robot_current, str(robot_current))
+
+        # Publish end-effector position
+        if isinstance(ee_position, (list, np.ndarray)) and len(ee_position) == 6:
+            ee_position_msg = {
+                "x": round(ee_position[0], 4),
+                "y": round(ee_position[1], 4),
+                "z": round(ee_position[2], 4),
+                "rx": round(ee_position[3], 4),
+                "ry": round(ee_position[4], 4),
+                "rz": round(ee_position[5], 4),
+            }
+        else:  # Handle unexpected cases
+            ee_position_msg = {"error": "invalid position data"}
+        client.publish(topic_end_effector_position, json.dumps(ee_position_msg))
+
+        # Publish force
+        if isinstance(force, (list, np.ndarray)) and len(force) >= 3:
+            force_msg = {
+                "fx": round(force[0], 4),
+                "fy": round(force[1], 4),
+                "fz": round(force[2], 4),
+            }
+        else:  # Handle scalar force case
+            force_msg = {"fx": round(force, 4), "fy": 0.0, "fz": 0.0}
+        client.publish(topic_force, json.dumps(force_msg))
+
+    except Exception as e:
+        print(f"Error publishing robot data: {e}")
+
+def telemetry_task(rob):
+    """Continuously publish robot telemetry data at 1 Hz."""
+    try:
+        while not stop_event.is_set():
+            if not client._userdata.get("connected_flag", False):
+                print("Waiting for MQTT connection...")
+                time.sleep(1)
+                continue
+
+            # Publish data at 1 Hz
+            publish_data(rob)
+            time.sleep(1.0)  # Fixed frequency of 1 Hz
+
+    except Exception as e:
+        print(f"Error in telemetry task: {e}")
+        stop_event.set()
+
+def move_robot_task(rob):
+    """Execute robot movement pattern through 4 points."""
+    try:
+        print("Moving to initial position...")
+        # Convert points to lists if they aren't already
+        rob.movel(list(initial_point), acc=0.5, vel=0.1, wait=True)
+        time.sleep(0.5)
+        
+        for cycle in range(2):
+            if stop_event.is_set():
+                break
+            print(f"Starting cycle {cycle + 1}")
+            
+            # Forward movement
+            for point in [intermediate_point1, intermediate_point2, target_point]:
+                rob.movel(list(point), acc=0.5, vel=0.5, wait=True)
+                time.sleep(0.5)
+            
+            # Return movement
+            for point in [intermediate_point2, intermediate_point1, initial_point]:
+                rob.movel(list(point), acc=0.5, vel=0.5, wait=True)
+                time.sleep(0.5)
+        
+        movement_completed.set()
+        print("Robot movement completed.")
+    except Exception as e:
+        print(f"Movement task error: {e}")
+        stop_event.set()
+if __name__ == '__main__':
+    try:
+        print("Connecting to UR10...")
+        rob = urx.Robot("192.168.10.11", use_rt=True, urFirm=5.1)
+        print("Connected to UR10.")
+        # Start telemetry and movement tasks
+        telemetry_thread = threading.Thread(target=telemetry_task, args=(rob,), daemon=True)
+        movement_thread = threading.Thread(target=move_robot_task, args=(rob,), daemon=True)
+
+        telemetry_thread.start()
+        movement_thread.start()
+
+        movement_completed.wait()
+    except KeyboardInterrupt:
+        print("\nShutdown requested...")
+    finally:
+        stop_event.set()
+        telemetry_thread.join(timeout=5.0)
+        movement_thread.join(timeout=5.0)
+        rob.close()
+        client.loop_stop()
+        client.disconnect()
+        print("Cleaned up resources.")

@@ -1,0 +1,136 @@
+1.	Requirements.txt
+Flask==2.3.3
+tensorflow==2.18.0
+numpy==2.0.2
+scikit-learn==1.6.1
+2.	app.py
+from flask import Flask, request, jsonify
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+import pickle
+import os
+import logging
+
+app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Load model and scaler paths from environment variables
+MODEL_PATH = os.getenv('MODEL_PATH', 'lstm_model.keras')
+SCALER_PATH = os.getenv('SCALER_PATH', 'scaler.pkl')
+
+# Global variables for model and scaler
+model = None
+scaler = None
+
+# Define constants for input shape
+n_steps = 10  # Number of time steps
+n_features = 5  # Number of features per step
+
+# Load model and scaler
+def load_model_and_scaler():
+    global model, scaler
+
+    # Load LSTM model
+    try:
+        model = load_model(MODEL_PATH)
+        logging.info(f"Model loaded successfully from {MODEL_PATH}.")
+    except Exception as e:
+        logging.error(f"Failed to load model from {MODEL_PATH}: {e}")
+        raise RuntimeError(f"Failed to initialize model: {str(e)}")
+
+    # Load scaler
+    try:
+        with open(SCALER_PATH, 'rb') as f:
+            scaler = pickle.load(f)
+        logging.info(f"Scaler loaded successfully from {SCALER_PATH}.")
+    except Exception as e:
+        logging.error(f"Failed to load scaler from {SCALER_PATH}: {e}")
+        raise RuntimeError(f"Failed to initialize scaler: {str(e)}")
+
+# Load model and scaler at startup
+load_model_and_scaler()
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Parse and validate JSON input
+        data = request.get_json()
+        if not data or 'input' not in data:
+            raise ValueError("Payload must be a JSON object with a key 'input'.")
+
+        # Convert input to numpy array
+        X_input = np.array(data['input'], dtype=np.float32)
+        expected_shape = (n_steps * n_features,)
+        if X_input.shape != expected_shape:
+            raise ValueError(f"Input shape must be {expected_shape}. Received: {X_input.shape}")
+
+        # Reshape and normalize input for the model
+        X_input = X_input.reshape((1, n_steps, n_features))
+        X_input_scaled = scaler.transform(X_input.reshape(-1, n_features)).reshape((1, n_steps, n_features))
+
+        # Perform prediction
+        prediction_scaled = model.predict(X_input_scaled)
+
+        # Process binary prediction
+        if prediction_scaled.shape == (1, 1):
+            prediction = int(prediction_scaled[0][0] > 0.5)  # Convert to binary output (0 or 1)
+        else:
+            raise ValueError("Unexpected model output shape for binary classification.")
+
+        logging.info(f"Prediction successful: {prediction}")
+        return jsonify({'class': prediction}), 200
+
+    except Exception as e:
+        logging.error(f"Error during prediction: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/health', methods=['GET'])
+def health():
+    """
+    Health check endpoint to verify API availability and dependencies.
+    """
+    health_status = {
+        'status': 'ok',
+        'model_loaded': model is not None,
+        'scaler_loaded': scaler is not None,
+        'n_steps': n_steps,
+        'n_features': n_features
+    }
+    return jsonify(health_status), 200
+
+if __name__ == '__main__':
+    # Get port from environment variable or default to 5000
+    PORT = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=PORT, debug=False)
+3.	Dockerfile
+# Use a lightweight Python base image
+FROM python:3.9-slim
+# Set working directory
+WORKDIR /app
+# Copy the requirements file and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Copy the model, scaler, and application code into the container
+COPY lstm_model.keras .
+COPY scaler.pkl .  
+COPY app.py .
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV MODEL_PATH=lstm_model.keras
+ENV SCALER_PATH=scaler.pkl
+ENV FLASK_APP=app.py
+
+# Expose the port the Flask app will run on
+EXPOSE 5000
+
+# Add healthcheck (Optional)
+HEALTHCHECK --interval=30s --timeout=5s CMD curl --fail http://localhost:5000/health || exit 1
+# Run the Flask app
+CMD ["python", "app.py"]
+
+4.	Code for docker image creation
+docker build -t modelname .
+docker run -p 5000:5000 lstm_model_api
